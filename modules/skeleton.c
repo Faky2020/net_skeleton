@@ -827,8 +827,17 @@ time_t ns_mgr_poll(struct ns_mgr *mgr, int milli) {
   return current_time;
 }
 
+
+static struct ns_connect_opts ns_connect_default_opts;
+
 struct ns_connection *ns_connect(struct ns_mgr *mgr, const char *address,
                                  ns_event_handler_t callback) {
+  return ns_connect_opt(mgr, address, callback, ns_connect_default_opts);
+}
+
+struct ns_connection *ns_connect_opt(struct ns_mgr *mgr, const char *address,
+                                     ns_event_handler_t callback,
+                                     struct ns_connect_opts opts) {
   sock_t sock = INVALID_SOCKET;
   struct ns_connection *nc = NULL;
   union socket_address sa;
@@ -839,6 +848,20 @@ struct ns_connection *ns_connect(struct ns_mgr *mgr, const char *address,
   if ((sock = socket(AF_INET, proto, 0)) == INVALID_SOCKET) {
     return NULL;
   }
+
+  if (opts.sndbuf_size != 0) {
+    if(setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (void *) &opts.sndbuf_size, sizeof(int)) == -1) {
+      perror("failed to tune TCP send buffer size\n");
+      return NULL;
+    }
+  }
+  if (opts.rcvbuf_size != 0) {
+    if(setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (void *) &opts.rcvbuf_size, sizeof(int)) == -1) {
+      perror("failed to tune TCP receive buffer size\n");
+      return NULL;
+    }
+  }
+
   ns_set_non_blocking_mode(sock);
   rc = (proto == SOCK_DGRAM) ? 0 : connect(sock, &sa.sa, sizeof(sa.sin));
 

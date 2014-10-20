@@ -249,7 +249,13 @@ void ns_broadcast(struct ns_mgr *, ns_event_handler_t, void *, size_t);
 struct ns_connection *ns_next(struct ns_mgr *, struct ns_connection *);
 struct ns_connection *ns_add_sock(struct ns_mgr *, sock_t, ns_event_handler_t);
 struct ns_connection *ns_bind(struct ns_mgr *, const char *, ns_event_handler_t);
+
+struct ns_connect_opts {
+  int sndbuf_size; /* 0 means unset */
+  int rcvbuf_size; /* 0 means unset */
+};
 struct ns_connection *ns_connect(struct ns_mgr *, const char *, ns_event_handler_t);
+struct ns_connection *ns_connect_opt(struct ns_mgr *, const char *, ns_event_handler_t, struct ns_connect_opts);
 
 int ns_send(struct ns_connection *, const void *buf, int len);
 int ns_printf(struct ns_connection *, const char *fmt, ...);
